@@ -2,14 +2,58 @@ import { InputBox } from "../../components/index"
 import googleIcon from '../../images/google.png'
 import { Link } from "react-router-dom"
 import { AnimationWrapper } from '../../common/common'
+import { useRef } from "react"
 
 
 const UserAuthForm = ({ type }) => {
+
+  const authForm = useRef();
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    let form = new FormData(authForm.current);
+    let formData = {};
+
+    for(let[key, value] of form.entries()) {
+      formData[key] = value;
+    }
+
+    let { fullname, email, password } = formData
+
+    // validations
+    // Fullname validation
+    if (!fullname || typeof fullname !== "string") {
+      return res.status(400).json({ error: "Fullname is required" });
+    }
+    if (fullname.trim().length < 3) {
+      return res.status(400).json({ error: "Fullname must be at least 3 letters long" });
+    }
+
+    // Email validation
+    if (!email || typeof email !== "string" || email.trim() === "") {
+      return res.status(400).json({ error: "Email is required" });
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "Please provide a valid email address" });
+    }
+
+    // Password validation
+    if (!password || typeof password !== "string") {
+      return res.status(400).json({ error: "Password is required" });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters long" });
+    }
+
+  }
+
   return (
     <>
       <AnimationWrapper keyValue={type}>
         <section className="h-cover flex items-center justify-center">
-          <form className="w-[80%] max-w-[400px]">
+          <form ref={authForm} className="w-[80%] max-w-[400px]">
               <h1 className="text-4xl font-gelasio capitalize text-center mb-24">
                   {type == "sign-in" ? "Welcome Back" : "Join us today"}
               </h1> 
@@ -42,6 +86,7 @@ const UserAuthForm = ({ type }) => {
               <button 
                 className="btn-dark center mt-14"
                 type="submit"
+                onClick={handleSubmit}
               >
                 { type.replace("-", " ") }
               </button>

@@ -7,7 +7,8 @@ function Navbar() {
 
   return (
     <>
-      <nav className="navbar">
+    <nav className="navbar">
+
       <Link to="/" className="flex-none w-10">
         <img src={logo} alt="logo image" className="w-full" />
       </Link>
