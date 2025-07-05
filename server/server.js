@@ -5,10 +5,12 @@ import bcrypt, { hash } from 'bcryptjs';
 import User from './Schema/User.js';
 import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
-
+import cors from 'cors';
 
 const server = express();
 server.use(express.json());
+server.use(cors())
+
 const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB with proper error handling
@@ -44,7 +46,6 @@ const generateUsername = async (email) => {
 // Route for user signup
 server.post("/signup", (req, res) => {
   try {
-    // console.log("Received signup request:", req.body);
     
     const { fullname, email, password } = req.body;
 

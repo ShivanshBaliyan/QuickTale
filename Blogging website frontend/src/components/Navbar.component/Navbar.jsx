@@ -1,9 +1,13 @@
 import { Link , Outlet } from "react-router-dom"
 import logo from "../../images/logo.png"
-import { useState } from "react"
+import { useContext, useState } from "react"
+import { UserContext } from "../../App"
 
 function Navbar() {
   const [searchBoxVisibility, setSearchBoxVisibility] = useState(false)
+  const { userAuth } = useContext(UserContext);
+  const access_token = userAuth?.access_token;
+  const profile_img = userAuth?.profile_img;
 
   return (
     <>
@@ -41,28 +45,37 @@ function Navbar() {
         </button>
 
         {/* Write option */}
-        <Link
-          to="/editor"
-          className="hidden md:flex items-center gap-2 text-gray-900 hover:text-black hover:bg-gray-300 py-3 px-6 opacity-75 text-lg rounded-full hover:outline-3 hover:outline-black"
+        <Link to="/editor" 
+        className="hidden md:flex items-center gap-2 text-gray-900 hover:text-black hover:bg-gray-300 py-3 px-6 opacity-75 text-lg rounded-full hover:outline-3 hover:outline-black"
         >
           <i className="fa-solid fa-file-pen pt-1.5"></i>
           <span>Write</span>
         </Link>
 
-        {/* Sign In */}
-        <Link to="/signin"
-          className="btn-dark"  
-        >
-          Sign In
-        </Link>
+        {
+          access_token ? 
+            <>
 
-        {/* Sign Up */}
-        <Link to="/signup"
-          className="btn-light"  
-        >
-          Sign Up
-        </Link>
+              {/* Sign In */}
+              <Link to="/signin" className="btn-dark">
+                Sign In
+              </Link>
 
+              {/* Sign Up */}
+              <Link to="/signup" className="btn-light">
+                Sign Up
+              </Link>
+
+            </>
+            
+          : 
+            <Link to="/dashboard/notification">
+              <button className="h-12 w-12 bg-gray-300 rounded-full relative hover:bg-black/10">
+                
+              </button>
+            </Link> 
+        }
+        
       </div>
     </nav>
     
