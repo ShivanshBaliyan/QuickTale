@@ -1,11 +1,11 @@
-import { InputBox } from "../../components/index"
-import googleIcon from '../../images/google.png'
+import { InputBox } from "../components/index"
+import googleIcon from '../images/google.png'
 import { Link, Navigate } from "react-router-dom"
-import { AnimationWrapper, storeInSession, lookInSession, removeFromSession} from '../../common/common'
+import { AnimationWrapper, storeInSession } from '../common/common'
 import { Toaster, toast } from "react-hot-toast";
 import axios from "axios"
 import { useContext } from "react";
-import { UserContext } from "../../App";
+import { UserContext } from "../App";
 
 
 const UserAuthForm = ({ type }) => {

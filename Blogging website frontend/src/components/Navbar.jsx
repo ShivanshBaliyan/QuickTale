@@ -1,7 +1,8 @@
 import { Link , Outlet } from "react-router-dom"
-import logo from "../../images/logo.png"
+import logo from "../images/logo.png"
 import { useContext, useState } from "react"
-import { UserContext } from "../../App"
+import { UserContext } from "../App"
+import UserNavigationPanel from "./UserNavigation"
 
 function Navbar() {
   const [searchBoxVisibility, setSearchBoxVisibility] = useState(false)
@@ -55,6 +56,23 @@ function Navbar() {
         {
           access_token ? 
             <>
+              <Link to="/dashboard/notification">
+                <button className="h-12 w-12 bg-gray-300 rounded-full relative hover:bg-black/10">
+                  <i className="fa-regular fa-bell text-2xl block mt-1"></i>
+                </button>
+              </Link> 
+
+              <div className="relative">
+                <button className="w-12 h-12 mt-1">
+                  <img src={profile_img} className="w-full h-full object-cover rounded-full" />
+                </button>
+
+                <UserNavigationPanel />
+
+              </div>
+            </>
+          : 
+            <>
 
               {/* Sign In */}
               <Link to="/signin" className="btn-dark">
@@ -67,13 +85,6 @@ function Navbar() {
               </Link>
 
             </>
-            
-          : 
-            <Link to="/dashboard/notification">
-              <button className="h-12 w-12 bg-gray-300 rounded-full relative hover:bg-black/10">
-                
-              </button>
-            </Link> 
         }
         
       </div>

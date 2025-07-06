@@ -1,4 +1,5 @@
-import Navbar from "./Navbar.component/Navbar";
-import InputBox from "./InputBox.component/InputBox";
+import Navbar from "./Navbar";
+import InputBox from "./InputBox";
+import UserNavigationPanel from "./UserNavigation";
 
-export {Navbar, InputBox}
+export {Navbar, InputBox, UserNavigationPanel}

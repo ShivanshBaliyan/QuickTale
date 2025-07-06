@@ -1,3 +1,3 @@
-import UserAuthForm from "./userAuthForm.page/userAuthForm";
+import UserAuthForm from "./UserAuthForm.jsx";
 
 export { UserAuthForm }
