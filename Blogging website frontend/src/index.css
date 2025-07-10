@@ -49,3 +49,7 @@ section{
 .center{
   @apply block mx-auto;
 }
+
+.link{
+  @apply text-gray-600 hover:text-black hover:bg-gray-200 p-3 px-4 block opacity-75;
+}

@@ -1,7 +1,7 @@
 import { InputBox } from "../components/index"
 import googleIcon from '../images/google.png'
 import { Link, Navigate } from "react-router-dom"
-import { AnimationWrapper, storeInSession } from '../common/common'
+import { AnimationWrapper, authWithGoogle, storeInSession } from '../common/common'
 import { Toaster, toast } from "react-hot-toast";
 import axios from "axios"
 import { useContext } from "react";
@@ -69,6 +69,26 @@ const UserAuthForm = ({ type }) => {
 
   }
 
+  const handleGoogleAuth = (e) => {
+    e.preventDefault();
+
+    authWithGoogle().then((user) => {
+      
+      let serverRoute = "/google-auth"
+      let formData = {
+        access_token: user.access_token
+      }
+
+      UserAuthThroughServer(serverRoute, formData)
+
+    })
+    .catch((err) => {
+      toast.error('troble login through google')
+      return console.log(err);
+    })
+
+  }
+
   return (
     <>
       {access_token ? (
@@ -122,7 +142,9 @@ const UserAuthForm = ({ type }) => {
                 </div>
 
                 <div className="flex items-center justify-center">
-                  <button className="btn-dark flex items-center justify-center gap-4">
+                  <button className="btn-dark flex items-center justify-center gap-4"
+                    onClick={handleGoogleAuth}
+                  >
                     <img src={googleIcon} className="w-5" />
                     Continue with Google
                   </button>
