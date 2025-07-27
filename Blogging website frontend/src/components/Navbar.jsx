@@ -59,7 +59,7 @@ function Navbar() {
 
         {/* Write option */}
         <Link to="/editor" 
-        className="hidden md:flex items-center gap-2 text-gray-900 hover:text-black hover:bg-gray-300 py-3 px-6 opacity-75 text-lg rounded-full hover:outline-3 hover:outline-black"
+        className="hidden md:flex items-center gap-2 text-gray-900 hover:text-black hover:bg-gray-300 py-3 px-6 opacity-75 text-lg rounded-full hover:outline-2 hover:outline-black"
         >
           <i className="fa-solid fa-file-pen pt-1.5"></i>
           <span>Write</span>
@@ -76,7 +76,7 @@ function Navbar() {
 
               <div className="relative" onClick={handleUserNavPanel} onBlur={handleBlur}>
                 <button className="w-12 h-12 mt-1">
-                  <img src={profile_img} className="w-full h-full object-cover rounded-full" />
+                  <img src={profile_img} alt="Profile" className="w-full h-full object-cover rounded-full" />
                 </button>
 
                 {

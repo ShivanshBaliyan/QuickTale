@@ -11,6 +11,9 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 const serviceAccountKey = require("./quicktale-2d287-firebase-adminsdk-fbsvc-1240e5de82.json");
 import { getAuth } from "firebase-admin/auth";
+import { S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 const server = express();
 server.use(express.json());
@@ -32,6 +35,29 @@ mongoose.connect(process.env.DB_LOCATION, {
   process.exit(1); // Exit if cannot connect to database
 });
 
+// Setting up AWS S3 bucket
+const s3 = new S3Client({
+  region: 'eu-north-1',
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+  }
+})
+
+const generateUploadURL = async () => {
+  const date = new Date();
+  const imageName = `${nanoid()}-${date.getTime()}.jpeg`;
+
+  const command = new PutObjectCommand({
+    Bucket: 'quicktale',
+    Key: imageName,
+    ContentType: "image/jpeg"
+  });
+
+  const url = await getSignedUrl(s3, command, { expiresIn: 1000 })
+  return url;
+}
+
 const formatDatatoSend = (user) => {
 
   const access_token = jwt.sign({ id: user._id }, process.env.SECRET_ACCESS_KEY);
@@ -51,6 +77,15 @@ const generateUsername = async (email) => {
   userExists ? username += nanoid(5) : "";
   return username;
 }
+
+server.get('/get-upload-url', (req, res) => {
+  generateUploadURL()
+    .then((url) => res.status(200).json({ uploadURL: url }))
+    .catch((err) => {
+      console.log(err.message);
+      return res.status(500).json({ error: err.message });
+    });
+});
 
 // Route for user signup
 server.post("/signup", (req, res) => {
