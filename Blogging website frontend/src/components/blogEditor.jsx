@@ -2,24 +2,34 @@ import { Link } from 'react-router-dom';
 import logo from '../images/logo.png';
 import { AnimationWrapper, uploadImage } from '../common/common';
 import defaultBanner from '../images/blog-banner.png';
-import { useContext, useEffect } from 'react';
+import { use, useContext, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { EditorContext } from '../pages/pages.js';
 import EditorJS from '@editorjs/editorjs';
 import { tools } from './tools.jsx';   // importing components/tools
+import axios from 'axios';
+import { UserContext } from '../App.jsx';
+import { useNavigate } from 'react-router-dom';
 
 const BlogEditor = () => {
     let { blog, blog: { title, banner, content, tags, des, author }, setBlog, textEditor, setTextEditor, setEditorState } = useContext(EditorContext);
 
-    useEffect(() => {
-        setTextEditor(new EditorJS({
-            holder: 'textEditor',
-            data: content,
-            tools: tools,
-            placeholder: "Let's write an awesome story!",
-        }))
-    }, [])
+    const { userAuth } = useContext(UserContext);
+    const access_token = userAuth?.access_token;
 
+    let navigate = useNavigate();
+
+    useEffect(() => {
+        if(!textEditor.isReady) {
+            setTextEditor(new EditorJS({
+                holder: 'textEditor',
+                data: content,
+                tools: tools,
+                placeholder: "Let's write an awesome story!",
+            }))
+        }        
+    }, [])
+ 
     const handleBannerUpload = (e) => {
         let img = e.target.files[0];
 
@@ -84,6 +94,52 @@ const BlogEditor = () => {
         }
     }
 
+    const handleSaveDraft = (e) => {
+        
+        if(e.target.classList.contains('disable')) {
+            return;
+        }
+
+        if(!title.length) {
+            return toast.error("Write a blog title before saving it as draft");
+        } 
+
+        let loadingToast = toast.loading("Saving Draft...");
+
+        e.target.classList.add('disable');
+
+        if(textEditor.isReady) {
+            textEditor.save().then(content => {
+                let blogObj = {
+                    title, banner, des, tags, content, draft: true
+                }
+
+                axios.post(import.meta.env.VITE_SERVER_DOMAIN + "/create-blog", blogObj, {
+                    headers: {
+                        Authorization: `Bearer ${access_token}`
+                    }
+                })
+                .then(() => {
+                    e.target.classList.remove('disable');
+
+                    toast.dismiss(loadingToast);
+                    toast.success("Saved👍");
+
+                    setTimeout(() => {
+                        navigate("/")
+                    }, 1000);
+
+                })
+                .catch(( { response } ) => {
+                    e.target.classList.remove('disable');
+                    toast.dismiss(loadingToast); 
+
+                    return toast.error(response.data.error)
+                })
+            })
+        }        
+    }
+
     return (
         <>
             <nav className="navbar">
@@ -100,7 +156,9 @@ const BlogEditor = () => {
                     >
                         Publish
                     </button>
-                    <button className='btn-light py-2'>
+                    <button className='btn-light py-2'
+                        onClick={handleSaveDraft}
+                    >
                         Save Draft
                     </button>
                 </div>

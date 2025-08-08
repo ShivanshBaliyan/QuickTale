@@ -43,7 +43,7 @@ section{
 }
 
 .input-box {
-  @apply w-[100%] rounded-md p-4 bg-gray-200 border border-gray-200 focus:bg-transparent placeholder:text-black;
+  @apply w-[100%] rounded-md p-4 bg-gray-200 border pl-12 border-gray-200 focus:bg-transparent placeholder:text-black;
 }
 
 .input-icon{

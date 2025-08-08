@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 const InputBox = ({ name, type, id, value, placeholder, icon }) => {
+
   const [passwordVisible, setPasswordVisible] = useState(false)
 
   return (
@@ -10,7 +11,7 @@ const InputBox = ({ name, type, id, value, placeholder, icon }) => {
           name={name}
           type={ type == "password" ? passwordVisible ? "text" : "password" : type}
           placeholder={placeholder}
-          defaultValue={value}
+          value={value}
           id={id}
           className="input-box"
         />
