@@ -19,7 +19,28 @@
     *   **Search**: A comprehensive search functionality to find blogs by title or query, as well as to look up user accounts.
 *   **User Profiles**: Public user profiles show personal information, bio, and a summary of their activity, including total posts and reads.
 
-## ScreenShots
+## Screenshots
+
+### 🏠 Home Page
+![Home Page](Blogging%20website%20frontend/Screenshots/homepage.png)
+
+### 🏠 Home Page (User Logged In)
+![Home Page Logged In](Blogging%20website%20frontend/Screenshots/homepage-with-userlogged-in.png)
+
+### ✍️ Write Blog
+![Write Blog](Blogging%20website%20frontend/Screenshots/writeBlog.png)
+
+### 🔑 Sign In
+![Sign In](Blogging%20website%20frontend/Screenshots/signin.png)
+
+### 🆕 Sign Up
+![Sign Up](Blogging%20website%20frontend/Screenshots/signup.png)
+
+### 🔍 Blog Searching
+![Blog Searching](Blogging%20website%20frontend/Screenshots/blogSearching.png)
+
+### 🔎 User Searching
+![User Searching](Blogging%20website%20frontend/Screenshots/userSearching.png)
 
 ## Tech Stack
 
