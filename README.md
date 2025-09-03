@@ -22,7 +22,7 @@
 ## Screenshots
 
 ### 🏠 Home Page
-![Home Page](Blogging%20website%20frontend/Screenshots/homepage.png)
+![Home Page](/Screenshots/homepage.png)
 
 ### 🏠 Home Page (User Logged In)
 ![Home Page Logged In](Blogging%20website%20frontend/Screenshots/homepage-with-userlogged-in.png)
