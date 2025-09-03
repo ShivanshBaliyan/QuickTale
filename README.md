@@ -1,4 +1,4 @@
-# QuickTale (Fully developed till 10Sept 2025)
+# QuickTale – Fully Built by Sept 10, 2025
 [![Ask DeepWiki](https://devin.ai/assets/askdeepwiki.png)](https://deepwiki.com/ShivanshBaliyan/QuickTale)
 
 **QuickTale** is a full-stack blogging platform that enables users to write, publish, and discover stories from around the world. It features a modern, clean user interface and is powered by a robust backend. The application leverages a rich text editor for a seamless writing experience and integrates with AWS S3 for efficient image handling and Firebase for user authentication.
