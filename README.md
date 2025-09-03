@@ -25,22 +25,22 @@
 ![Home Page](/Screenshots/homepage.png)
 
 ### 🏠 Home Page (User Logged In)
-![Home Page Logged In](Blogging%20website%20frontend/Screenshots/homepage-with-userlogged-in.png)
+![Home Page Logged In](/homepage-with-userlogged-in.png)
 
 ### ✍️ Write Blog
-![Write Blog](Blogging%20website%20frontend/Screenshots/writeBlog.png)
+![Write Blog](/Screenshots/writeBlog.png)
 
 ### 🔑 Sign In
-![Sign In](Blogging%20website%20frontend/Screenshots/signin.png)
+![Sign In](/Screenshots/signin.png)
 
 ### 🆕 Sign Up
-![Sign Up](Blogging%20website%20frontend/Screenshots/signup.png)
+![Sign Up](/Screenshots/signup.png)
 
 ### 🔍 Blog Searching
-![Blog Searching](Blogging%20website%20frontend/Screenshots/blogSearching.png)
+![Blog Searching](/Screenshots/blogSearching.png)
 
 ### 🔎 User Searching
-![User Searching](Blogging%20website%20frontend/Screenshots/userSearching.png)
+![User Searching](/Screenshots/userSearching.png)
 
 ## Tech Stack
 
