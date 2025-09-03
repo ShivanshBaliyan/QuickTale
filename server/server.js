@@ -248,6 +248,157 @@ server.post("/google-auth", async (req, res) => {
 
 })
 
+// Get latest blogs
+server.post('/latest-blogs', (req, res) => {
+  let { page } = req.body;
+
+  let maxLimit = 5;
+
+  Blog.find({ draft: false })
+  .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
+  .sort({ "publishedAt": -1 })
+  .select("blog_id title des banner activity tags publishedAt -_id")
+  .skip((page - 1) * maxLimit)
+  .limit(maxLimit)
+  .then(blogs => {
+    return res.status(200).json({ blogs })
+  })
+  .catch(err => {
+    return res.status(500).json({ error: err.message });
+  })
+
+})
+
+// all latest blogs count
+server.post('/all-latest-blogs-count', (req, res) => {
+  Blog.countDocuments({ draft: false })
+  .then(count => {
+    return res.status(200).json({ totalDocs: count })
+  })
+  .catch(err => {
+    console.log(err.message);
+    return res.status(500).json({ error: err.message });
+  })
+
+})
+
+// Trending blogs
+server.get('/trending-blogs', (req, res) => {
+  Blog.find({ draft: false })
+  .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
+  .sort({ "activity.total_reads": -1, "activity.total_likes": -1, "publishedAt": -1 })
+  .select("blog_id title publishedAt -_id")
+  .limit(5)
+  .then(blogs => {
+    return res.status(200).json({ blogs })
+  })
+  .catch(err => {
+    return res.status(500).json({ error: err.message });
+  })
+})
+
+// escape helper
+function escapeRegExp(str = "") {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// search blogs
+server.post('/search-blogs', (req, res) => {
+  // console.log('[SERVER] /search-blogs body ->', req.body); 
+
+  let { tag, query, page = 1 } = req.body;
+  let findQuery = { draft: false };
+
+  if (tag) {
+    findQuery.tags = tag;
+  } else if (query) {
+    const safe = escapeRegExp(query);
+    // match title (regex) OR tags array (case-insensitive exact match)
+    findQuery = {
+      draft: false,
+      $or: [
+        { title: new RegExp(safe, 'i') },
+        { tags: { $in: [ new RegExp(`^${safe}$`, 'i') ] } }
+      ]
+    };
+  }
+
+  let maxLimit = 5;
+
+  Blog.find(findQuery)
+    .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
+    .sort({ "publishedAt": -1 })
+    .select("blog_id title des banner activity tags publishedAt -_id")
+    .skip((page - 1) * maxLimit)
+    .limit(maxLimit)
+    .then(blogs => {
+      // console.log('[SERVER] /search-blogs returning count ->', Array.isArray(blogs) ? blogs.length : 0);
+      return res.status(200).json({ blogs });
+    })
+    .catch(err => {
+      // console.error('[SERVER] /search-blogs error ->', err.message);
+      return res.status(500).json({ error: err.message });
+    });
+});
+
+// search blogs count
+server.post('/search-blogs-count', (req, res) => {
+  let { tag, query } = req.body;
+  let findQuery = { draft: false };
+
+  if (tag) {
+    findQuery.tags = tag;
+  } else if (query) {
+    const safe = escapeRegExp(query);
+    findQuery = {
+      draft: false,
+      $or: [
+        { title: new RegExp(safe, 'i') },
+        { tags: { $in: [ new RegExp(`^${safe}$`, 'i') ] } }
+      ]
+    };
+  }
+
+  Blog.countDocuments(findQuery)
+    .then(count => res.status(200).json({ totalDocs: count }))
+    .catch(err => {
+      console.log(err.message);
+      return res.status(500).json({ error: err.message });
+    });
+});
+
+// search users
+server.post('/search-users', (req, res) => {
+  
+  let { query } = req.body;
+
+  User.find({ "personal_info.username": new RegExp(escapeRegExp(query), 'i') })
+  .limit(50)
+  .select("personal_info.fullname personal_info.username personal_info.profile_img -_id")
+  .then(users => {
+    return res.status(200).json({ users });
+  })
+  .catch(err => {
+    return res.status(500).json({ error: err.message });
+  })
+
+})
+
+// user profile
+server.post('/get-profile', (req, res) => {
+  let { username } = req.body;
+
+  User.findOne({ "personal_info.username": username })
+  .select("personal_info fullname email profile_img bio username -_id")
+  .then(user => {
+    return res.status(200).json({ user });
+  })
+  .catch(err => {
+    return res.status(500).json({ error: err.message });
+  })
+
+})
+
 // create blog route
 server.post("/create-blog", verifyJWT , (req, res) => {
   let authorId = req.user;

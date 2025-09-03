@@ -45,7 +45,7 @@ const UserAuthForm = ({ type }) => {
     if (fullname) {
       if (fullname.trim().length < 3) {
         return toast.error("Fullname must be at least 3 letters long" );
-    }
+      }
     }
 
     // Email validation
