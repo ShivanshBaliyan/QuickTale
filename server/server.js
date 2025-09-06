@@ -303,10 +303,10 @@ function escapeRegExp(str = "") {
 }
 
 // search blogs
-server.post('/search-blogs', (req, res) => {
-  // console.log('[SERVER] /search-blogs body ->', req.body); 
+server.post('/search-blogs', async (req, res) => {
+  // console.log('[SERVER] /search-blogs body ->', req.body);
 
-  let { tag, query, page = 1 } = req.body;
+  let { tag, query, page = 1, author } = req.body;
   let findQuery = { draft: false };
 
   if (tag) {
@@ -321,6 +321,20 @@ server.post('/search-blogs', (req, res) => {
         { tags: { $in: [ new RegExp(`^${safe}$`, 'i') ] } }
       ]
     };
+  }
+  else if (author) {
+    // Check if author is a valid ObjectId (MongoDB ID) or username
+    if (mongoose.Types.ObjectId.isValid(author)) {
+      // author is already a user ID
+      findQuery.author = author;
+    } else {
+      // author is a username, find user by username
+      const user = await User.findOne({ "personal_info.username": author }).select("_id");
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      findQuery.author = user._id;
+    }
   }
 
   let maxLimit = 5;
@@ -342,8 +356,8 @@ server.post('/search-blogs', (req, res) => {
 });
 
 // search blogs count
-server.post('/search-blogs-count', (req, res) => {
-  let { tag, query } = req.body;
+server.post('/search-blogs-count', async (req, res) => {
+  let { tag, query, author } = req.body;
   let findQuery = { draft: false };
 
   if (tag) {
@@ -357,6 +371,19 @@ server.post('/search-blogs-count', (req, res) => {
         { tags: { $in: [ new RegExp(`^${safe}$`, 'i') ] } }
       ]
     };
+  } else if (author) {
+    // Check if author is a valid ObjectId (MongoDB ID) or username
+    if (mongoose.Types.ObjectId.isValid(author)) {
+      // author is already a user ID
+      findQuery.author = author;
+    } else {
+      // author is a username, find user by username
+      const user = await User.findOne({ "personal_info.username": author }).select("_id");
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      findQuery.author = user._id;
+    }
   }
 
   Blog.countDocuments(findQuery)
@@ -389,8 +416,9 @@ server.post('/get-profile', (req, res) => {
   let { username } = req.body;
 
   User.findOne({ "personal_info.username": username })
-  .select("personal_info fullname email profile_img bio username -_id")
+  .select("-google_auth -updatedAt -blogs -personal_info.password")
   .then(user => {
+    // console.log("Sending user profile:", user);
     return res.status(200).json({ user });
   })
   .catch(err => {

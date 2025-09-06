@@ -12,5 +12,6 @@ import { activeTabRef } from "./inpage-Navigation.jsx";
 import NoDataMessage from "./nodataMsg.jsx";
 import LoadMoreDataBtn from "./load-more-btn.jsx";
 import UserCard from "./userCard.jsx";
+import AboutUser from "./about.jsx";
 
-export { Navbar, InputBox, UserNavigationPanel, BlogEditor, PublishForm, Tag, InPageNavigation, Loader, BlogPostCard, MinimalBlogPost, activeTabRef, NoDataMessage, LoadMoreDataBtn, UserCard };
+export { Navbar, InputBox, UserNavigationPanel, BlogEditor, PublishForm, Tag, InPageNavigation, Loader, BlogPostCard, MinimalBlogPost, activeTabRef, NoDataMessage, LoadMoreDataBtn, UserCard, AboutUser };
