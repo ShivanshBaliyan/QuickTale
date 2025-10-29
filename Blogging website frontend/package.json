@@ -22,6 +22,7 @@
     "axios": "^1.10.0",
     "firebase": "^11.10.0",
     "framer-motion": "^12.12.1",
+    "highlight.js": "^11.11.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot": "^0.0.1",

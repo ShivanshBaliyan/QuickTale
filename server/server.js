@@ -17,6 +17,9 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 // Importing the schema
 import User from './Schema/User.js';
 import Blog from './Schema/Blog.js';
+import Notification from './Schema/Notification.js'
+import Comment from './Schema/Comment.js';
+import { error } from 'console';
 
 const server = express();
 server.use(express.json());
@@ -306,11 +309,11 @@ function escapeRegExp(str = "") {
 server.post('/search-blogs', async (req, res) => {
   // console.log('[SERVER] /search-blogs body ->', req.body);
 
-  let { tag, query, page = 1, author } = req.body;
+  let { tag, query, page = 1, author, limit, eliminate_blog } = req.body;
   let findQuery = { draft: false };
 
   if (tag) {
-    findQuery.tags = tag;
+    findQuery = { tags: tag, blog_id: { $ne: eliminate_blog } }
   } else if (query) {
     const safe = escapeRegExp(query);
     // match title (regex) OR tags array (case-insensitive exact match)
@@ -337,7 +340,7 @@ server.post('/search-blogs', async (req, res) => {
     }
   }
 
-  let maxLimit = 5;
+  let maxLimit = limit ? limit : 2;
 
   Blog.find(findQuery)
     .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
@@ -431,7 +434,7 @@ server.post('/get-profile', (req, res) => {
 server.post("/create-blog", verifyJWT , (req, res) => {
   let authorId = req.user;
 
-  let { title, des, banner, tags, content, draft } = req.body;
+  let { title, des, banner, tags, content, draft, id } = req.body;
   
   if(!title) {
     return res.status(400).json({ error: "Title is required" });
@@ -457,27 +460,292 @@ server.post("/create-blog", verifyJWT , (req, res) => {
 
   tags = tags.map(tag => tag.toLowerCase());
 
-  let blog_id = title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, "-").trim() + nanoid();
-  
-  let blog = new Blog({
-    title, des, banner, content, tags, author: authorId, blog_id, draft: Boolean(draft)
-  })
+  let blog_id = id || title.replace(/[^a-zA-Z0-9]/g, ' ').replace(/\s+/g, "-").trim() + nanoid();
 
-  blog.save().then(blog => {
-    let incrementVal = draft ? 0 : 1;
-    
-    User.findOneAndUpdate({ _id: authorId }, { $inc: { "account.info.total_posts" : incrementVal }, $push : { "blogs": blog._id } })
-    .then(user => {
-      return res.status(200).json({ id: blog.blog_id })
+  if(id) {
+
+    Blog.findOneAndUpdate({ blog_id }, { title, des, banner, content, tags, draft: draft ? draft : false })
+    .then(blog => {
+      return res.status(200).json({ id: blog_id });
     })
     .catch(err => {
-      return res.status(500).json({ error: "Failed to update total posts number" });
+      return res.status(500).json({ error: "err.message" })
     })
+
+  }else {
+
+    let blog = new Blog({
+      title, des, banner, content, tags, author: authorId, blog_id, draft: Boolean(draft)
+    })
+
+    blog.save().then(blog => {
+      let incrementVal = draft ? 0 : 1;
+      
+      User.findOneAndUpdate({ _id: authorId }, { $inc: { "account.info.total_posts" : incrementVal }, $push : { "blogs": blog._id } })
+      .then(user => {
+        return res.status(200).json({ id: blog.blog_id })
+      })
+      .catch(err => {
+        return res.status(500).json({ error: "Failed to update total posts number" });
+      })
+    })
+    .catch(err => { 
+      return res.status(500).json({ error: err.message });
+    })
+  }
+  
+})
+
+// get blog by id
+server.post('/get-blog', (req, res) => {
+  let { blog_id, draft, mode } = req.body;
+
+  let incrementVal = mode != 'edit' ? 1 : 0;
+
+  Blog.findOneAndUpdate({ blog_id }, { $inc: { "activity.total_reads": incrementVal } })
+  .populate("author", " personal_info.fullname  personal_info.username personal_info.profile_img ")
+  .select("title des content banner activity publishedAt blog_id tags")
+  .then(blog => {
+
+    User.findOneAndUpdate({ "personal_info.username": blog.author.personal_info.username }, {
+      $inc: { "account_info.total_reads": incrementVal }
+    })
+    .catch(err => {
+      return res.status(500).json({ error: err.message });
+    })
+
+    if(blog.draft && !draft) {
+      return res.status(500).json({ error: 'you can not access draft blogs' })
+    }
+
+    return res.status(200).json({ blog })
   })
-  .catch(err => { 
+  .catch(err => {
     return res.status(500).json({ error: err.message });
   })
-  
+
+})
+
+// like blog route
+server.post('/like-blog', verifyJWT, (req, res) => {
+  let user_id = req.user;
+
+  let { _id, isLikedByUser } = req.body;
+  // Fix the logic: when user likes (isLikedByUser is false), increment; when unlikes (isLikedByUser is true), decrement
+  let incrementVal = !isLikedByUser ? 1 : -1;
+
+  Blog.findOneAndUpdate({ _id }, { $inc: { "activity.total_likes": incrementVal } })
+  .then(blog => {
+    if(!isLikedByUser){
+      // Create notification when user likes (not when unliking)
+      let like = new Notification({
+        type:  "like",
+        blog: _id,
+        notification_for: blog.author,
+        user: user_id
+      })
+
+      like.save().then(notification => {
+        return res.status(200).json({ liked_by_user: true })
+      })
+    }
+    else {
+      // Delete notification when user unlikes
+      Notification.findOneAndDelete({ user: user_id, blog: _id, type: 'like' })
+      .then(data => {
+        return res.status(200).json({ liked_by_user: false })
+      })
+      .catch(err => {
+        return res.status(500).json({ error: err.message })
+      })
+    }
+  })
+})
+
+// is blog liked
+server.post('/isliked-by-user', verifyJWT, (req, res) => {
+  let user_id = req.user;
+  let { _id } = req.body;
+
+  Notification.exists({ user: user_id, type: 'like', blog: _id })
+  .then(result => {
+    return res.status(200).json({ result })
+  })
+  .catch(err => {
+    return res.status(500).json({ error: err.message })
+  })
+
+})
+
+// add comment route
+server.post('/add-comment', verifyJWT, (req, res) => {
+
+  let user_id = req.user;
+  let { _id, comment, replying_to, blog_author } = req.body;
+
+  if(!comment.length) {
+    return res.status(403).json({ error: 'Write something to leave a comment' })
+  }
+
+  let commentObj = {
+    blog_id: _id,
+    blog_author,
+    comment,
+    commented_by: user_id,
+  }
+
+  if(replying_to) {
+    commentObj.parent = replying_to;
+    commentObj.isReply = true;
+  }
+
+  new Comment(commentObj).save().then(async commentFile => {
+    let { comment, commentedAt, children } = commentFile;
+
+    Blog.findOneAndUpdate({ _id }, { $push: { "comments": commentFile._id }, $inc: { "activity.total_comments": 1, "activity.total_parent_comments": replying_to ? 0 : 1 } })
+    .then(blog => {
+      // console.log("New Comment created");
+    })
+    .catch(err => {
+      console.error("Error updating blog with comment:", err);
+      return res.status(500).json({ error: "Failed to update blog with comment" });
+    });
+
+    let notificationObj = {
+      type: replying_to ? "reply" : "comment",
+      blog: _id,
+      notification_for: blog_author,
+      user: user_id,
+      comment: commentFile._id
+    }
+
+    if(replying_to) {
+      notificationObj.replied_on_comment = replying_to;
+
+      await Comment.findOneAndUpdate({ _id: replying_to }, { $push: { children: commentFile._id } })
+      .then(replyingToCommentDoc => { notificationObj.notification_for = replyingToCommentDoc.commented_by })
+    }
+
+    new Notification(notificationObj).save().then(notification => {
+      // console.log("Comment notification created");
+    })
+    .catch(err => {
+      console.error("Error creating notification:", err);
+    });
+
+    return res.status(200).json({
+      comment, commentedAt, _id: commentFile._id, user_id, children
+    })
+
+  })
+  .catch(err => {
+    console.error("Error saving comment:", err);
+    return res.status(500).json({ error: "Failed to save comment" });
+  });
+
+})
+
+// get blog comments route
+server.post('/get-blog-comments', async (req, res) => {
+  let { blog_id, skip } = req.body;
+  let maxLimit = 5;
+
+  try {
+    // Find parent comments only (not replies)
+    const parentComments = await Comment.find({ blog_id, isReply: false })
+      .populate("commented_by", "personal_info.username personal_info.fullname personal_info.profile_img")
+      .skip(skip)
+      .limit(maxLimit)
+      .sort({ 'commentedAt': -1 });
+
+    // Add childrenLevel property to each comment for frontend rendering
+    const commentsWithLevel = parentComments.map(comment => ({
+      ...comment.toObject(),
+      childrenLevel: 0
+    }));
+
+    return res.status(200).json(commentsWithLevel);
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({ error: err.message });
+  }
+});
+
+// get replies for a comment
+server.post('/get-replies', async (req, res) => {
+  let { _id, skip = 0 } = req.body;
+  let maxLimit = 5;
+
+  try {
+    // First get the comment to get its children IDs
+    const comment = await Comment.findById(_id).select("children");
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    // Then fetch the children with pagination
+    const replies = await Comment.find({ _id: { $in: comment.children } })
+      .populate("commented_by", "personal_info.profile_img personal_info.fullname personal_info.username")
+      .sort({ 'commentedAt': 1 }) // Sort replies in ascending order (oldest first)
+      .skip(skip)
+      .limit(maxLimit);
+
+    return res.status(200).json({ replies });
+  } catch (err) {
+    console.log(err.message);
+    return res.status(500).json({ error: err.message });
+  }
+})
+
+// delete comments helper function
+const deleteComments = (_id) => {
+
+  Comment.findOneAndDelete({ _id })
+  .then(comment => {
+    if(comment.parent) {
+      Comment.findOneAndUpdate({ _id: comment.parent }, { $pull: { children: _id } })
+      .then(data => console.log("Removed comment from parent's children array"))
+      .catch(err => console.error(err));
+    }
+
+    Notification.findOneAndDelete({ comment: _id }).then(notification => console.log("Comment notification deleted"))
+
+    Notification.findOneAndDelete({ reply: _id }).then(notification => console.log("Reply notification deleted"))
+
+    Blog.findOneAndUpdate({ _id: comment.blog_id }, { $pull: { comments: _id }, $inc: { "activity.total_comments": -1 }, "activity.total_parent_comments": comment.parent ? 0 : -1 })
+    .then(blog => {
+      if(comment.children.length) {
+        comment.children.map(replies => {
+          deleteComments(replies);
+        })
+      }
+    })
+
+  })
+  .catch(err => {
+    console.log(err.message);
+  })
+
+}
+
+// delete comment route
+server.post('/delete-comment', verifyJWT, (req, res) => {
+  let user_id = req.user;
+  let { _id } = req.body;
+
+  Comment.findOne({ _id })
+  .then(comment => {
+    if( user_id == comment.commented_by || user_id == comment.blog_author ) {
+
+      deleteComments(_id)
+
+      return res.status(200).json({ message: "Comment deleted successfully" });
+
+    }else {
+      return res.status(403).json({ error: "You are not authorized to delete this comment" });
+    }
+  })
+
 })
 
 // Start the server
