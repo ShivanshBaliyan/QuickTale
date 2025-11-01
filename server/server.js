@@ -25,11 +25,20 @@ const server = express();
 server.use(express.json());
 server.use(cors())
 
+// simple request logger to help debug route 404s
+server.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 const PORT = process.env.PORT || 3000;
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountKey)
 });
+
+let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
+let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
 
 // Connect to MongoDB with proper error handling
 mongoose.connect(process.env.DB_LOCATION, {
@@ -251,6 +260,50 @@ server.post("/google-auth", async (req, res) => {
 
 })
 
+// change password route
+server.post('/change-password', verifyJWT, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body || {};
+
+    if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
+      return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+    }
+
+    if (!passwordRegex.test(newPassword) || !passwordRegex.test(currentPassword)) {
+      return res.status(403).json({ error: "Password must be at least 6 characters long and contain at least one number, one lowercase and one uppercase letter" });
+    }
+
+    const user = await User.findById(req.user).select('personal_info.password google_auth');
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    if (user.google_auth) {
+      return res.status(403).json({ error: "You can't change account's password because you logged in through google" });
+    }
+
+    const compare = await new Promise((resolve, reject) => {
+      bcrypt.compare(currentPassword, user.personal_info.password, (err, same) => {
+        if (err) return reject(err);
+        resolve(same);
+      });
+    });
+
+    if (!compare) return res.status(403).json({ error: 'Incorrect Current Password' });
+
+    const hashed_password = await new Promise((resolve, reject) => {
+      bcrypt.hash(newPassword, 10, (err, hash) => {
+        if (err) return reject(err);
+        resolve(hash);
+      });
+    });
+
+    await User.findByIdAndUpdate(req.user, { 'personal_info.password': hashed_password });
+    return res.status(200).json({ status: 'Password Changed' });
+  } catch (err) {
+    console.error('change-password error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Get latest blogs
 server.post('/latest-blogs', (req, res) => {
   let { page } = req.body;
@@ -429,6 +482,78 @@ server.post('/get-profile', (req, res) => {
   })
 
 })
+
+//update profile img
+server.post('/update-profile-img', verifyJWT, (req, res) => {
+  let { url } = req.body;
+
+  User.findOneAndUpdate({ _id: req.user }, { "personal_info.profile_img": url })
+  .then(() => {
+    return res.status(200).json({ peofile_img: url })
+  })
+  .catch(err => {
+    return res.status(500).json({ error: err.message })
+  })
+})
+
+// update profile
+server.post('/update-profile', verifyJWT, (req, res) => {
+  let { username, bio, social_links } = req.body;
+  let bioLimit = 150;
+
+  if (username.length < 3) {
+    return res.status(403).json({ error: "Username must be at least 3 characters long" });
+  }
+
+  if (bio.length > bioLimit) {
+    return res.status(403).json({ error: `Bio must be less than ${bioLimit} characters` });
+  }
+
+  let socialLinksArr = Object.keys(social_links);
+
+  try {
+
+    for (let i = 0; i < socialLinksArr.length; i++) {
+      if (social_links[socialLinksArr[i]].length) {
+
+        let hostname = new URL(social_links[socialLinksArr[i]]).hostname;
+        if (!hostname.includes(`${socialLinksArr[i]}.com`) && socialLinksArr[i] != "website") {
+
+          return res.status(403).json({
+            error: `${socialLinksArr[i]} link is not valid. you must enter a valid ${socialLinksArr[i]} link`,
+          });
+        }
+
+      }
+    }
+
+  }catch (err) {
+
+    return res.status(500).json({
+      error: "You must provide full social links with http(s) included",
+    });
+
+  }
+
+  let updateObj = {
+    "personal_info.username": username,
+    "personal_info.bio": bio,
+    social_links,
+  };
+
+  User.findOneAndUpdate({ _id: req.user }, updateObj, {
+    runValidators: true,
+  })
+  .then(() => {
+    return res.status(200).json({ username });
+  })
+  .catch((err) => {
+    if (err.code == 11000) {
+      return res.status(409).json({ error: "Username already exists" });
+    }
+    return res.status(500).json({ error: err.message });
+  });
+});
 
 // create blog route
 server.post("/create-blog", verifyJWT , (req, res) => {

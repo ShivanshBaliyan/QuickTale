@@ -84,11 +84,11 @@ const CommentsContainer = () => {
 
             {
                 // show Load More only when total_parent_comments (server) is greater than loaded count (client)
-                (Number(total_parent_comments || 0) > Number(totalParentCommentsLoaded || 0)) ?
+                // (Number(total_parent_comments || 0) > Number(totalParentCommentsLoaded || 0)) ?
                 <button onClick={loadMoreComments} className="text-gray-800 !p-2 !px-3 hover:bg-gray-400/30 rounded-md flex items-center gap-2">
                     Load More
                 </button>
-                : null
+                // : null
             }
 
         </div>

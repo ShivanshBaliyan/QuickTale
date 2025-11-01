@@ -28,7 +28,9 @@ const BlogPage = () => {
   const [ commentsWrapper, setCommentsWrapper ] = useState(false);
   const [ totalParentCommentsLoaded, setTotalParentCommentsLoaded ] = useState(0);
 
-  let { title, content, banner, author: { personal_info: { fullname, username: author_username , profile_img } }, publishedAt, tags } = blog;
+  const { title = '', content = [], banner = '', author = {}, publishedAt = '', tags = [] } = blog || {};
+  const { personal_info = {} } = author || {};
+  const { fullname = '', username: author_username = '', profile_img = '' } = personal_info;
 
   const fetchBlog = () => {
     axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/get-blog', { blog_id })

@@ -51,12 +51,18 @@ const ProfilePage = () => {
     const fetchUserProfile = () => {
         axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/get-profile', { username: profileId })
         .then(({ data }) => {
-            // console.log("Profile data received:", data);
-            const user = data.user || profileDataStructure;
-            // console.log("User object:", user);
+            if (!data.user) {
+                setProfile(profileDataStructure);
+                setLoading(false);
+                return;
+            }
+            const user = data.user;
+            // console.log("User data:", user);
             setProfile(user);
             setProfileLoaded(profileId);
-            getBlogs({ user_id: user._id });
+            if (user._id) {
+                getBlogs({ user_id: user._id });
+            }
             setLoading(false);
         })
         .catch(err => {
@@ -67,9 +73,13 @@ const ProfilePage = () => {
     }
 
     const getBlogs = ({ page = 1, user_id }) => {
-        user_id = user_id == undefined ? blogs.user_id : user_id;
-
-        axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/search-blogs', { author: user_id, page })
+        // If no user_id is provided and blogs is null, don't proceed
+        if (!user_id && !blogs) return;
+        
+        // Use provided user_id or get it from blogs state
+        const authorId = user_id || blogs.user_id;
+        
+        axios.post(import.meta.env.VITE_SERVER_DOMAIN + '/search-blogs', { author: authorId, page })
         .then( async ({ data }) => {
             let formattedData = await filterPaginationData({
                 state: blogs,
@@ -116,12 +126,12 @@ const ProfilePage = () => {
                                 <h1 className="text-xl font-medium" >@{profile_username}</h1>
                                 <p className="text-xl capitalize h-6">{fullname}</p>
 
-                                <p>{total_posts.toLocaleString()} Blogs - {total_reads.toLocaleString()} - Reads</p>
+                                <p>{total_posts.toLocaleString()} Blogs | {total_reads.toLocaleString()} Reads</p>
 
                                 <div className="flex gap-4 mt-2">
 
                                     {
-                                        profileId == username ? <Link to="/setting/edit-profile" className='btn-light rounded-md'>Edit Profile</Link> : null
+                                        profileId == username ? <Link to="/settings/edit-profile" className='btn-light rounded-md'>Edit Profile</Link> : null
                                     }
 
                                 </div>

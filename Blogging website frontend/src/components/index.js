@@ -18,5 +18,6 @@ import BlogContent from "./blog.Content.jsx";
 import CommentsContainer from "./comments.jsx";
 import CommentField from "./common-field.jsx";
 import CommentCard from "./comment-card.jsx";
+import SideNav from "./side-navBar.jsx";
 
-export { Navbar, InputBox, UserNavigationPanel, BlogEditor, PublishForm, Tag, InPageNavigation, Loader, BlogPostCard, MinimalBlogPost, activeTabRef, NoDataMessage, LoadMoreDataBtn, UserCard, AboutUser, BlogInteraction, BlogContent, CommentsContainer, CommentField, CommentCard };
+export { Navbar, InputBox, UserNavigationPanel, BlogEditor, PublishForm, Tag, InPageNavigation, Loader, BlogPostCard, MinimalBlogPost, activeTabRef, NoDataMessage, LoadMoreDataBtn, UserCard, AboutUser, BlogInteraction, BlogContent, CommentsContainer, CommentField, CommentCard, SideNav };
