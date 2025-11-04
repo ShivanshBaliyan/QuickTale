@@ -1,8 +1,9 @@
 import { Link , Outlet, useNavigate } from "react-router-dom"
 import logo from "../images/logo.png"
-import { useContext, useState } from "react"
+import { useContext, useState, useEffect } from "react"
 import { UserContext } from "../App"
-import { UserNavigationPanel } from "./index"
+import { UserNavigationPanel } from "../components/index"
+import axios from "axios"
 
 function Navbar() {
   const [ searchBoxVisibility, setSearchBoxVisibility ] = useState(false)
@@ -10,9 +11,29 @@ function Navbar() {
 
   let navigate = useNavigate();
 
-  const { userAuth } = useContext(UserContext);
+  const { userAuth, setUserAuth } = useContext(UserContext);
   const access_token = userAuth?.access_token;
   const profile_img = userAuth?.profile_img;
+  let new_notification_available = userAuth?.new_notification_available;
+
+  useEffect(() => {
+
+    if(access_token){
+      axios.get(import.meta.env.VITE_SERVER_DOMAIN + "/new-notification", {
+        headers: {
+          Authorization : `Bearer ${access_token}`
+
+        }
+      })
+      .then(({data}) => {
+          setUserAuth({ ...userAuth, ...data})
+      })
+      .catch(err => {
+        console.log(err)
+      })
+    }
+
+  },[access_token])
 
   const handleUserNavPanel = () => {
     setUserNavPanel(currVal => !currVal);
@@ -32,6 +53,8 @@ function Navbar() {
     }, 200)
   }
 
+  // console.log(new_notification_available);
+
   return (
     <>
     <nav className="navbar z-50">
@@ -39,6 +62,8 @@ function Navbar() {
       <Link to="/" className="flex-none w-10">
         <img src={logo} alt="logo image" className="w-full" />
       </Link>
+
+      {/* <p>{ new_notification_available }</p> */}
 
       {/* Search Bar */}
       <div
@@ -79,9 +104,15 @@ function Navbar() {
         {
           access_token ? 
             <>
-              <Link to="/dashboard/notification">
+              <Link to="/dashboard/notifications">
                 <button className="h-12 w-12 bg-gray-300 rounded-full relative hover:bg-black/10">
                   <i className="fa-regular fa-bell text-2xl block mt-1"></i>
+
+                  {
+                    new_notification_available ? 
+                    <span className="bg-red-400 w-3 h-3 rounded-full absolute z-10 top-2 right-2 "></span> : ""
+                  }
+
                 </button>
               </Link> 
 

@@ -2,7 +2,7 @@ import { Route, Routes, useParams } from "react-router-dom"
 import { createContext, useEffect, useState } from "react"
 import { lookInSession } from "./common/common.js"
 import { Navbar, SideNav } from "./components/index"
-import { Editor, UserAuthForm, HomePage, SearchPage, PageNotFound, ProfilePage, BlogPage, ChangePassword, EditProfile } from "./pages/pages.js"
+import { Editor, UserAuthForm, HomePage, SearchPage, PageNotFound, ProfilePage, BlogPage, ChangePassword, EditProfile, Notifications } from "./pages/pages.js"
 
 export const UserContext = createContext({});
 
@@ -25,6 +25,10 @@ function App() {
           <Route path="/editor/:blog_id" element={<Editor />} />
           <Route path="/" element={<Navbar />}>
             <Route index element={<HomePage />} />
+
+            <Route path="dashboard" element={<SideNav />} >
+              <Route path="notifications" element={<Notifications />} />
+            </Route>
 
             <Route path="settings" element={<SideNav />} >
               <Route path="edit-profile" element={<EditProfile />} />

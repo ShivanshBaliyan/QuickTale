@@ -4,17 +4,16 @@ import { UserContext } from "../App.jsx";
 
 const SideNav = () => {
 
-    let { userAuth
-        // : 
-        // { 
-        // new_notification_available , isAdmin 
-    // } 
+    let { userAuth 
+        // isAdmin 
     } = useContext(UserContext);
     let access_token = userAuth?.access_token;
+    let new_notification_available = userAuth?.new_notification_available;
 
     let page = location.pathname.split("/")[2];
 
-    let [pageState, setPageState] = useState(page.replace("-", " "));
+    // let [pageState, setPageState] = useState(page.replace("-", " "));
+    let [pageState, setPageState] = useState(page?.replace("-", " ") || "");
     let [showSideNav, setShowSideNav] = useState(false);
     let activeTabLine = useRef();
     let sideBarIconTab = useRef();
@@ -74,9 +73,15 @@ const SideNav = () => {
                             Blogs
                         </NavLink>
 
-                        <NavLink to="/dashboard/notification" onClick={(e) => setPageState(e.target.innerText)} className="sidebar-link">
-                            <i className="fa-regular fa-bell"></i>
-                            Notification
+                        <NavLink to="/dashboard/notifications" onClick={(e) => setPageState(e.target.innerText)} className="sidebar-link">
+                            <div className="relative">
+                                <i className="fa-regular fa-bell"></i>
+                                {
+                                    new_notification_available ?
+                                    <span className="bg-red-400 w-2 h-2 rounded-full absolute z-10 top-0 right-0"></span> : ""
+                                }
+                            </div>
+                            Notifications
                         </NavLink>
 
                         <NavLink to="/editor" onClick={(e) => setPageState(e.target.innerText)} className="sidebar-link">
