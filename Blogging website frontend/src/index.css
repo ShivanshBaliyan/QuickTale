@@ -99,5 +99,5 @@ input:disabled, input:disabled ~ .input-icon{
 }
 
 .ce-block__content, .ce-toolbar__content{
-    max-width: 900px;
+  max-width: 900px;
 }
