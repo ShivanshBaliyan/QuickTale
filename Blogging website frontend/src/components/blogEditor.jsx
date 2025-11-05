@@ -6,7 +6,7 @@ import { use, useContext, useEffect } from 'react';
 import { Toaster, toast } from 'react-hot-toast';
 import { EditorContext } from '../pages/pages.js';
 import EditorJS from '@editorjs/editorjs';
-import { tools } from './tools.jsx';   // importing components/tools
+import { tools } from './tools.jsx';  
 import axios from 'axios';
 import { UserContext } from '../App.jsx';
 import { useNavigate } from 'react-router-dom';
@@ -128,7 +128,7 @@ const BlogEditor = () => {
                     toast.success("Saved👍");
 
                     setTimeout(() => {
-                        navigate("/")
+                        navigate("/dashboard/blogs?tab=draft")
                     }, 1000);
 
                 })

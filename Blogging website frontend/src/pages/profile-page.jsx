@@ -43,7 +43,7 @@ const ProfilePage = () => {
       bio = ""
     } = personal_info;
 
-    const { total_posts = 0, total_reads = 0 } = account_info;
+    let { total_posts = 0, total_reads = 0 } = account_info;
 
     let userContext = useContext(UserContext);
     let username = userContext?.userAuth?.username || null;

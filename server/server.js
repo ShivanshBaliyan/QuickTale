@@ -309,6 +309,11 @@ server.post('/latest-blogs', (req, res) => {
   let { page } = req.body;
 
   let maxLimit = 5;
+  // Debug: log requested page and how many published blogs exist
+  console.log('[SERVER] /latest-blogs request, page ->', page);
+  Blog.countDocuments({ draft: false })
+  .then(count => console.log('[SERVER] published blogs count ->', count))
+  .catch(err => console.log('[SERVER] count error ->', err && err.message));
 
   Blog.find({ draft: false })
   .populate("author", "personal_info.profile_img personal_info.username personal_info.fullname -_id")
@@ -605,9 +610,17 @@ server.post("/create-blog", verifyJWT , (req, res) => {
 
     blog.save().then(blog => {
       let incrementVal = draft ? 0 : 1;
-      
-      User.findOneAndUpdate({ _id: authorId }, { $inc: { "account.info.total_posts" : incrementVal }, $push : { "blogs": blog._id } })
+
+      console.log(`[SERVER] create-blog: authorId=${authorId}, draft=${draft}, incrementVal=${incrementVal}`);
+
+      // Update user's post count and push blog id; return the new user document for debugging
+      User.findOneAndUpdate(
+        { _id: authorId },
+        { $inc: { "account_info.total_posts": incrementVal }, $push: { "blogs": blog._id } },
+        { new: true }
+      )
       .then(user => {
+        console.log('[SERVER] create-blog: updated user account_info:', user ? user.account_info : null);
         return res.status(200).json({ id: blog.blog_id })
       })
       .catch(err => {
@@ -953,6 +966,84 @@ server.post("/all-notifications-count", verifyJWT , (req, res) => {
     return res.status(500).json({error: err.message})
   })
 
+})
+
+// user written blogs route
+server.post("/user-written-blogs",verifyJWT,  (req,res) => {
+
+    let user_id = req.user;
+    let {page, draft, query, deletedDocCount} = req.body;
+    let maxLimit  = 5;
+
+    let skipDocs = (page - 1) * maxLimit;
+
+    if(deletedDocCount){
+      skipDocs -= deletedDocCount;
+    }
+
+  // Build find query only with the fields actually provided to avoid matching draft: undefined
+  const findQuery = { author: user_id };
+  if (typeof draft !== 'undefined') findQuery.draft = draft;
+  if (query) findQuery.title = new RegExp(query, "i");
+
+  Blog.find(findQuery)
+    .skip(skipDocs)
+    .limit(maxLimit)
+    .sort({publishedAt: -1})
+    .select("title banner publishedAt blog_id activity des draft -_id")
+    .then(blogs => {
+      return res.status(200).json({blogs})
+
+    })
+    .catch(err => {
+      
+      return res.status(500).json({error: err.message})
+    })
+
+})
+
+// user written blogs count route
+server.post("/user-written-blogs-count", verifyJWT, (req, res) => {
+  let user_id = req.user;
+  let {draft, query} = req.body;
+
+  Blog.countDocuments({author: user_id, draft, title: new RegExp(query, "i")})
+  .then(count => {
+    return res.status(200).json({totalDocs: count})
+  })
+  .catch(err => {
+    return res.status(500).json({error: err.message})
+  })
+  
+
+})
+
+// delete blog
+server.post("/delete-blog", verifyJWT, (req, res) => {
+  let user_id = req.user;
+  // let isAdmin = req.admin;
+  let {blog_id} = req.body;
+
+  // if(isAdmin){
+    Blog.findOneAndDelete({blog_id})
+    .then(blog => {
+      Notification.deleteMany({blog: blog._id}).then(data => console.log('notification deleted'));
+      Comment.deleteMany({blog_id: blog._id}).then(data => console.log('comments deleted'));  
+  
+  // Remove from the 'blogs' array (plural) in user document and decrement count
+  User.findOneAndUpdate({_id: user_id}, {$pull: {blogs: blog._id}, $inc: {"account_info.total_posts": blog.draft ? 0 : -1}})
+      .then(user => console.log("blog deleted from user"))
+  
+      return res.status(200).json({status: "done"})
+  
+    })
+    .catch(err => {
+      return res.status(500).json({error: err.message})
+    })
+  // }else{
+  //   return res.status(500).json({error: "You are not authorized to delete blog"})
+  // }
+ 
 })
 
 // Start the server

@@ -5,14 +5,11 @@ import axios from "axios";
 
 const NotificationCommentField = ({ _id, blog_author, index = undefined, replyingTo = undefined, setIsReplying, notification_id, notificationData }) => {
 
-    let [ comment, setComment ] = useState("");
+    let [ comment, setComment ] = useState('');
 
     let { _id: user_id } = blog_author;
     let { userAuth: { access_token } } = useContext(UserContext);
-    let { notifications, setNotifications } = notificationData;
-    
-    // Handle both result and results keys
-    const notificationItems = notifications?.results || notifications?.result || [];
+    let { notifications, notifications: { results }, setNotifications } = notificationData;
 
     const handleComment = () => {
 
@@ -29,19 +26,8 @@ const NotificationCommentField = ({ _id, blog_author, index = undefined, replyin
         })
         .then(({ data }) => {
             setIsReplying(false);
-            
-            // Update the reply in the correct items array
-            const updatedItems = [...notificationItems];
-            if (updatedItems[index]) {
-                updatedItems[index].reply = {comment, _id: data._id};
-                
-                // Update notifications with the correct key (results or result)
-                if (notifications.results) {
-                    setNotifications({...notifications, results: updatedItems});
-                } else if (notifications.result) {
-                    setNotifications({...notifications, result: updatedItems});
-                }
-            }
+            results[index].reply = {comment, _id: data._id}
+            setNotifications({...notifications, results})
         })
         .catch(err => {
             console.log(err);
@@ -64,7 +50,7 @@ const NotificationCommentField = ({ _id, blog_author, index = undefined, replyin
                 className="input-box !pl-5 placeholder:text-gray-500 resize-none h-[150px] overflow-auto">
             </textarea>
 
-            <button className="btn-dark !mt-5 !px-10" onClick={handleComment}>Reply</button>
+            <button className="btn-dark mt-5 px-10" onClick={handleComment}>Reply</button>
         </>
     )
 }

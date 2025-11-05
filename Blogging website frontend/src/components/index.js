@@ -21,5 +21,6 @@ import CommentCard from "./comment-card.jsx";
 import SideNav from "./side-navBar.jsx";
 import NotificationsCard from "./notification-card.jsx";
 import NotificationCommentField from "./notificationComment-field.jsx";
+import { ManagePublishedBlogCard, ManageDraftBlogCard } from "./manage-BlogCard.jsx";
 
-export { Navbar, InputBox, UserNavigationPanel, BlogEditor, PublishForm, Tag, InPageNavigation, Loader, BlogPostCard, MinimalBlogPost, activeTabRef, NoDataMessage, LoadMoreDataBtn, UserCard, AboutUser, BlogInteraction, BlogContent, CommentsContainer, CommentField, CommentCard, SideNav, NotificationsCard, NotificationCommentField };
+export { Navbar, InputBox, UserNavigationPanel, BlogEditor, PublishForm, Tag, InPageNavigation, Loader, BlogPostCard, MinimalBlogPost, activeTabRef, NoDataMessage, LoadMoreDataBtn, UserCard, AboutUser, BlogInteraction, BlogContent, CommentsContainer, CommentField, CommentCard, SideNav, NotificationsCard, NotificationCommentField, ManagePublishedBlogCard, ManageDraftBlogCard };

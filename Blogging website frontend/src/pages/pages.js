@@ -11,5 +11,6 @@ import ChangePassword from "./change-password.page.jsx"
 import EditProfile from "./edit-profile.page.jsx"
 import profileDataStructure from "./profile-page.jsx"
 import Notifications from "./notification.page.jsx";
+import ManageBlogs from "./manageBlogs-page.jsx";
 
-export { UserAuthForm, Editor, EditorContext, HomePage, SearchPage, PageNotFound, ProfilePage, BlogPage, BlogContext, ChangePassword, EditProfile, profileDataStructure, Notifications };
+export { UserAuthForm, Editor, EditorContext, HomePage, SearchPage, PageNotFound, ProfilePage, BlogPage, BlogContext, ChangePassword, EditProfile, profileDataStructure, Notifications, ManageBlogs };
