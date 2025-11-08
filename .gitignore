@@ -62,11 +62,6 @@ dump/
 data/db/
 
 # ====================
-# Firebase
-# ====================  
-firebase.jsx
-
-# ====================
 # Firebase Admin SDK
 # ====================
 server/quicktale-2d287-firebase-adminsdk-fbsvc-1240e5de82.json

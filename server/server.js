@@ -6,9 +6,6 @@ import { nanoid } from 'nanoid';
 import jwt from 'jsonwebtoken';
 import cors from 'cors';
 import admin from "firebase-admin";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-const serviceAccountKey = require("./quicktale-2d287-firebase-adminsdk-fbsvc-1240e5de82.json");
 import { getAuth } from "firebase-admin/auth";
 import { S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -33,12 +30,27 @@ server.use((req, res, next) => {
 
 const PORT = process.env.PORT || 3000;
 
+// firebase
+const serviceAccountKey = {
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+  privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+};
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccountKey)
 });
 
 let emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/; // regex for email
 let passwordRegex = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/; // regex for password
+
+//checking
+try {
+  const auth = getAuth();
+  console.log("Firebase Admin initialized successfully!");
+} catch (err) {
+  console.error("Firebase Admin initialization failed:", err);
+}
 
 // Connect to MongoDB with proper error handling
 mongoose.connect(process.env.DB_LOCATION, {
